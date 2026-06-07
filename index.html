@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DevScope — GitHub User Explorer</title>
+  <meta name="description" content="Explore GitHub developer profiles, repository analytics, and language insights."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ── Header ─────────────────────────────────────── -->
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="logo">
+        <svg class="logo-icon" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+        </svg>
+        <span>DevScope</span>
+      </div>
+      <nav class="header-nav">
+        <button class="btn-compare" id="btnToggleCompare" title="Compare two GitHub users">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+          Compare
+        </button>
+        <button class="theme-toggle" id="themeToggle" title="Toggle light/dark mode">
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ── Hero / Search ──────────────────────────────── -->
+  <section class="hero">
+    <div class="hero-bg"><div class="hero-grid"></div></div>
+    <div class="hero-content">
+      <h1 class="hero-title">Explore GitHub<br/><span class="accent">Developer Profiles</span></h1>
+      <p class="hero-sub">Discover repositories, analytics &amp; insights for any GitHub user.</p>
+
+      <div class="search-container" id="searchContainer">
+        <div class="search-box">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="searchInput" class="search-input"
+                 placeholder="Search GitHub username… (⌘K)" autocomplete="off" spellcheck="false"/>
+          <button class="search-btn" id="searchBtn">
+            <span class="btn-text">Search</span>
+            <span class="btn-spinner hidden"></span>
+          </button>
+        </div>
+        <div class="search-error hidden" id="searchError"></div>
+
+        <!-- Search History Dropdown -->
+        <div class="search-history hidden" id="searchHistory">
+          <div class="history-header">
+            <span class="history-label">Recent searches</span>
+            <button class="history-clear" id="clearHistory">Clear all</button>
+          </div>
+          <div class="history-list" id="historyList"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Compare Mode Banner ────────────────────────── -->
+  <div class="compare-banner hidden" id="compareBanner">
+    <div class="compare-banner-inner">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+      <span>Compare Mode — Search for a second user to compare side-by-side</span>
+      <button id="cancelCompare">✕ Cancel</button>
+    </div>
+  </div>
+
+  <!-- ── Main Content ───────────────────────────────── -->
+  <main class="main-content" id="mainContent">
+
+    <!-- Loading Skeleton -->
+    <div class="loading-state hidden" id="loadingState">
+      <div class="skeleton-profile">
+        <div class="skeleton skeleton-avatar"></div>
+        <div class="skeleton-info">
+          <div class="skeleton skeleton-line w-40"></div>
+          <div class="skeleton skeleton-line w-60"></div>
+          <div class="skeleton skeleton-line w-80"></div>
+          <div class="skeleton-stats">
+            <div class="skeleton skeleton-stat"></div>
+            <div class="skeleton skeleton-stat"></div>
+            <div class="skeleton skeleton-stat"></div>
+          </div>
+        </div>
+      </div>
+      <div class="skeleton-repos">
+        <div class="skeleton skeleton-repo-card" style="--d:0"></div>
+        <div class="skeleton skeleton-repo-card" style="--d:1"></div>
+        <div class="skeleton skeleton-repo-card" style="--d:2"></div>
+        <div class="skeleton skeleton-repo-card" style="--d:3"></div>
+        <div class="skeleton skeleton-repo-card" style="--d:4"></div>
+        <div class="skeleton skeleton-repo-card" style="--d:5"></div>
+      </div>
+    </div>
+
+    <!-- Error State -->
+    <div class="error-state hidden" id="errorState">
+      <div class="error-card">
+        <div class="error-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        </div>
+        <h3 class="error-title" id="errorTitle">Something went wrong</h3>
+        <p class="error-msg" id="errorMsg">Please try again.</p>
+        <button class="btn-retry" id="btnRetry">Try Again</button>
+      </div>
+    </div>
+
+    <!-- Profile Section -->
+    <div class="profile-section hidden" id="profileSection">
+      <div id="profileHeader"></div>
+      <div class="compare-view hidden" id="compareView"></div>
+      <div class="analytics-row" id="analyticsRow">
+        <div class="lang-analytics-card">
+          <h3 class="card-title">Language Breakdown</h3>
+          <div class="lang-chart-wrap"><canvas id="langChart"></canvas></div>
+          <div class="lang-bars" id="langBars"></div>
+        </div>
+        <div class="activity-stats-card">
+          <h3 class="card-title">Repository Stats</h3>
+          <div class="stat-grid" id="repoStatGrid"></div>
+        </div>
+      </div>
+      <div class="repos-section" id="reposSection">
+        <div class="repos-header">
+          <h2 class="section-title">
+            Repositories <span class="repo-count-badge" id="repoCountBadge">0</span>
+          </h2>
+          <div class="repos-controls">
+            <select class="sort-select" id="sortSelect">
+              <option value="updated">Recently Updated</option>
+              <option value="stars">Most Stars</option>
+              <option value="name">Name (A–Z)</option>
+              <option value="forks">Most Forks</option>
+            </select>
+          </div>
+        </div>
+        <div class="repos-grid" id="reposGrid"></div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ── Footer ─────────────────────────────────────── -->
+  <footer class="site-footer">
+    <p>Powered by the <a href="https://docs.github.com/en/rest" target="_blank" rel="noopener">GitHub REST API</a> &nbsp;·&nbsp; DevScope &nbsp;·&nbsp; Press <kbd style="background:var(--bg-card);border:1px solid var(--border);padding:1px 5px;border-radius:3px;font-size:11px;">⌘K</kbd> to search</p>
+  </footer>
+
+  <!-- All JS is in a single module-style IIFE loaded at end -->
+  <script src="bundle.js"></script>
+</body>
+</html>
