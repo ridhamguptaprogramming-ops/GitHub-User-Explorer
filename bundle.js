@@ -1,14 +1,6 @@
-/**
- * DevScope — GitHub User Explorer
- * bundle.js: All modules combined (utils → api → ui → app)
- */
 
 (function () {
   'use strict';
-
-  /* ================================================================
-     UTILS
-  ================================================================ */
 
   function formatNumber(n) {
     if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
@@ -107,9 +99,7 @@
   function totalStars(repos) { return repos.reduce((s, r) => s + (r.stargazers_count || 0), 0); }
   function totalForks(repos) { return repos.reduce((s, r) => s + (r.forks_count || 0), 0); }
 
-  /* ================================================================
-     API
-  ================================================================ */
+/* APP */
 
   const BASE = 'https://api.github.com';
 
@@ -147,13 +137,10 @@
     return { user, repos };
   }
 
-  /* ================================================================
-     UI
-  ================================================================ */
-
+  /* UI State */
   let langChartInstance = null;
 
-  /* — Loading — */
+  /* Loading  */
   function showLoading() {
     document.getElementById('loadingState').classList.remove('hidden');
     document.getElementById('errorState').classList.add('hidden');
@@ -164,7 +151,7 @@
     document.getElementById('loadingState').classList.add('hidden');
   }
 
-  /* — Error — */
+  /* Error */
   function showError(title, message) {
     hideLoading();
     document.getElementById('errorTitle').textContent = title;
@@ -173,7 +160,7 @@
     document.getElementById('profileSection').classList.add('hidden');
   }
 
-  /* — Search state — */
+  /* Search state */
   function setSearchLoading(loading) {
     const btn     = document.getElementById('searchBtn');
     const spinner = btn.querySelector('.btn-spinner');
@@ -197,7 +184,7 @@
     setTimeout(() => el.classList.add('hidden'), 4000);
   }
 
-  /* — History — */
+  /* History */
   function renderHistory(history, onSelect) {
     const container = document.getElementById('searchHistory');
     const list      = document.getElementById('historyList');
@@ -220,7 +207,7 @@
     document.getElementById('searchHistory').classList.add('hidden');
   }
 
-  /* — Profile Header — */
+  /* Profile Header */
   function renderProfile(user) {
     const el = document.getElementById('profileHeader');
     const meta = [
@@ -267,7 +254,7 @@
       </div>`;
   }
 
-  /* — Language Chart — */
+  /* Language Chart */
   function renderLangAnalytics(repos) {
     const langs = aggregateLangs(repos);
     const top   = langs.slice(0, 8);
@@ -319,7 +306,7 @@
     });
   }
 
-  /* — Repo Stats — */
+  /* Repo Stats */
   function renderRepoStats(user, repos) {
     const el    = document.getElementById('repoStatGrid');
     const stars = totalStars(repos);
@@ -450,11 +437,7 @@
     document.body.appendChild(toast);
     setTimeout(() => toast?.remove(), 10000);
   }
-
-  /* ================================================================
-     APP
-  ================================================================ */
-
+// APP State
   const appState = {
     user1: null, repos1: null,
     user2: null, repos2: null,
@@ -462,14 +445,12 @@
     compareMode: false,
     lastSearch: '',
   };
-
-  /* — Theme — */
+/* Theme */
   function applyTheme(theme) {
     document.documentElement.setAttribute('data-theme', theme);
     saveTheme(theme);
   }
-
-  /* — History UI — */
+/*  History UI */
   function refreshHistory() {
     renderHistory(getHistory(), (username) => {
       document.getElementById('searchInput').value = username;
@@ -478,7 +459,7 @@
     });
   }
 
-  /* — Show/Hide sections — */
+  /* Show/Hide sections */
   function showProfileSection()  { document.getElementById('profileSection').classList.remove('hidden'); }
   function hideProfileSection()  { document.getElementById('profileSection').classList.add('hidden'); }
   function showAnalytics()       { document.getElementById('analyticsRow').style.display = ''; }
@@ -488,7 +469,7 @@
   function showCompareView()     { document.getElementById('compareView').classList.remove('hidden'); }
   function hideCompareView()     { document.getElementById('compareView').classList.add('hidden'); }
 
-  /* — Main search handler — */
+  /* Main search handler */
   async function doSearch(username) {
     const trimmed = username.trim();
     if (!trimmed) {
@@ -568,14 +549,12 @@
       setSearchLoading(false);
     }
   }
-
-  /* — Sort — */
+/* Sort */
   function handleSort(method) {
     appState.sortMethod = method;
     if (appState.repos1) renderRepos(appState.repos1, method);
   }
-
-  /* — Compare mode — */
+  /* Compare mode */
   function enterCompareMode() {
     if (!appState.user1) { showSearchError('Search for a user first, then compare.'); return; }
     appState.compareMode = true;
@@ -605,7 +584,7 @@
     }
   }
 
-  /* ── Wire up events ── */
+  /* Wire up events */
 
   document.getElementById('searchBtn').addEventListener('click', () =>
     doSearch(document.getElementById('searchInput').value));
@@ -658,11 +637,10 @@
     }
   });
 
-  /* ── Init ── */
+  /* Init */
   applyTheme(getSavedTheme());
   refreshHistory();
-
-  // Auto-search from ?user= URL param
+// Auto-search from ?user= URL param
   const urlUser = new URLSearchParams(window.location.search).get('user');
   if (urlUser) {
     document.getElementById('searchInput').value = urlUser;

@@ -7,6 +7,7 @@ import {
   renderRepoInsights, renderActivityInsights, renderTrending, renderHeatmap,
   renderFollowers, renderFavorites,
 } from './ui.js';
+import { startHumanTyping, startPlaceholderTyping } from './ui.js';
 import {
   escHtml, getHistory, addToHistory, clearHistory, getSavedTheme, saveTheme, debounce,
   getFavorites, saveFavorites, toggleFavorite, isFavorite, getLanguageOptions, filterRepos, computeDevScore,
@@ -234,6 +235,14 @@ function init() {
     doSearch(urlUser);
   }
   searchInput.focus();
+
+  // Start human-like typing on hero subtitle and search placeholder
+  try {
+    const heroEl = document.getElementById('heroSub');
+    const heroStrings = heroEl?.dataset?.strings ? heroEl.dataset.strings.split('|').map(s => s.trim()).filter(Boolean) : [];
+    if (heroStrings.length) startHumanTyping(heroEl, heroStrings, { minDelay: 28, maxDelay: 120, mistakeChance: 0.05, pauseBetween: 1800, loop: true });
+    startPlaceholderTyping(searchInput, ['octocat', 'torvalds', 'gaearon', 'sindresorhus', 'nodejs'], { minDelay: 25, maxDelay: 110, mistakeChance: 0.02, pauseBetween: 2400, loop: true });
+  } catch (e) { /* non-fatal */ }
 }
 
 searchBtn.addEventListener('click', () => doSearch(searchInput.value));

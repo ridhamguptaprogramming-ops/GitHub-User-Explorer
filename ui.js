@@ -341,3 +341,65 @@ function sortRepos(repos, method) {
     default: return sorted.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
   }
 }
+
+// Human-like typing utilities
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+export async function typeText(element, text, opts = {}) {
+  const minDelay = opts.minDelay ?? 30;
+  const maxDelay = opts.maxDelay ?? 140;
+  const mistakeChance = opts.mistakeChance ?? 0.04;
+  const isInput = element.tagName === 'INPUT' || element.tagName === 'TEXTAREA';
+  const write = (s) => { if (isInput) element.placeholder = s; else element.textContent = s; };
+
+  let current = '';
+  for (let i = 0; i < text.length; i++) {
+    // random human-like delay
+    await sleep(rand(minDelay, maxDelay));
+
+    // occasionally make a small mistake then correct it
+    if (Math.random() < mistakeChance && i < text.length - 1) {
+      const wrongChar = String.fromCharCode(97 + Math.floor(Math.random() * 26));
+      write(current + wrongChar);
+      await sleep(rand(80, 220));
+      // backspace
+      write(current);
+      await sleep(rand(60, 140));
+    }
+
+    current += text[i];
+    write(current);
+  }
+}
+
+export function startHumanTyping(target, strings, options = {}) {
+  const el = typeof target === 'string' ? document.querySelector(target) : target;
+  if (!el || !strings || !strings.length) return;
+  const pause = options.pauseBetween ?? 1600;
+  const loop = options.loop ?? true;
+
+  let cancelled = false;
+  (async function run() {
+    do {
+      for (const s of strings) {
+        if (cancelled) return;
+        // clear
+        if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') el.placeholder = '';
+        else el.textContent = '';
+        await typeText(el, s, options);
+        await sleep(pause + rand(-200, 400));
+      }
+    } while (loop && !cancelled);
+  })();
+
+  return { stop: () => { cancelled = true; } };
+}
+
+export function startPlaceholderTyping(inputEl, suggestions = [], options = {}) {
+  if (!inputEl || !suggestions.length) return;
+  // ensure element is an input
+  const el = inputEl.tagName === 'INPUT' ? inputEl : document.querySelector(inputEl);
+  if (!el) return;
+  return startHumanTyping(el, suggestions, options);
+}
