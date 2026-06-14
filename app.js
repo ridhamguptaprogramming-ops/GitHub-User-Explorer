@@ -14,7 +14,7 @@ import {
   buildProfileSummary, getActivitySets, getRepoInsights, getAchievementBadges, downloadFile,
 } from './utils.js';
 
-const state = {
+var state = {
   user1: null,
   repos1: null,
   followers: [],
@@ -29,22 +29,22 @@ const state = {
   repoStarFilter: 'any',
 };
 
-const searchInput = document.getElementById('searchInput');
-const searchBtn = document.getElementById('searchBtn');
-const themeToggle = document.getElementById('themeToggle');
-const sortSelect = document.getElementById('sortSelect');
-const clearHistBtn = document.getElementById('clearHistory');
-const btnRetry = document.getElementById('btnRetry');
-const btnToggleCompare = document.getElementById('btnToggleCompare');
-const compareBanner = document.getElementById('compareBanner');
-const cancelCompare = document.getElementById('cancelCompare');
-const repoSearchInput = document.getElementById('repoSearchInput');
-const languageFilter = document.getElementById('languageFilter');
-const starFilter = document.getElementById('starFilter');
-const toggleBookmarkBtn = document.getElementById('toggleBookmarkBtn');
-const exportSummaryBtn = document.getElementById('exportSummaryBtn');
-const exportReportBtn = document.getElementById('exportReportBtn');
-const repoCountBadge = document.getElementById('repoCountBadge');
+var searchInput = document.getElementById('searchInput');
+var searchBtn = document.getElementById('searchBtn');
+var themeToggle = document.getElementById('themeToggle');
+var sortSelect = document.getElementById('sortSelect');
+var clearHistBtn = document.getElementById('clearHistory');
+var btnRetry = document.getElementById('btnRetry');
+var btnToggleCompare = document.getElementById('btnToggleCompare');
+var compareBanner = document.getElementById('compareBanner');
+var cancelCompare = document.getElementById('cancelCompare');
+var repoSearchInput = document.getElementById('repoSearchInput');
+var languageFilter = document.getElementById('languageFilter');
+var starFilter = document.getElementById('starFilter');
+var toggleBookmarkBtn = document.getElementById('toggleBookmarkBtn');
+var exportSummaryBtn = document.getElementById('exportSummaryBtn');
+var exportReportBtn = document.getElementById('exportReportBtn');
+var repoCountBadge = document.getElementById('repoCountBadge');
 
 function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
@@ -52,8 +52,8 @@ function applyTheme(theme) {
 }
 
 function refreshHistory() {
-  const history = getHistory();
-  renderHistory(history, username => {
+  var history = getHistory();
+  renderHistory(history, function(username) {
     searchInput.value = username;
     hideHistory();
     doSearch(username);
@@ -62,12 +62,12 @@ function refreshHistory() {
 
 function refreshFavorites() {
   state.favorites = getFavorites();
-  const onView = username => {
+  var onView = function(username) {
     searchInput.value = username;
     doSearch(username);
   };
-  const onRemove = username => {
-    state.favorites = state.favorites.filter(item => item.login.toLowerCase() !== username.toLowerCase());
+  var onRemove = function(username) {
+    state.favorites = state.favorites.filter(function(item) { return item.login.toLowerCase() !== username.toLowerCase(); });
     saveFavorites(state.favorites);
     refreshFavorites();
     if (state.user1) updateBookmarkButton(isFavorite(state.user1.login));
@@ -76,8 +76,8 @@ function refreshFavorites() {
 }
 
 function updateFilters(repos) {
-  const languages = getLanguageOptions(repos);
-  languageFilter.innerHTML = '<option value="all">All languages</option>' + languages.map(lang => `<option value="${escHtml(lang)}">${escHtml(lang)}</option>`).join('');
+  var languages = getLanguageOptions(repos);
+  languageFilter.innerHTML = '<option value="all">All languages</option>' + languages.map(function(lang) { return '<option value="' + escHtml(lang) + '">' + escHtml(lang) + '</option>'; }).join('');
 }
 
 function applyRepoFilters() {
@@ -86,7 +86,7 @@ function applyRepoFilters() {
 }
 
 async function doSearch(username) {
-  const trimmed = username.trim();
+  var trimmed = username.trim();
   if (!trimmed) {
     showSearchError('Please enter a GitHub username.');
     searchInput.focus();
@@ -99,7 +99,8 @@ async function doSearch(username) {
   hideError();
 
   try {
-    const { user, repos, followers, following } = await fetchProfile(trimmed);
+    var res = await fetchProfile(trimmed);
+    var user = res.user, repos = res.repos, followers = res.followers, following = res.following;
 
     if (state.compareMode && state.user1) {
       state.user2 = user;
@@ -129,8 +130,8 @@ async function doSearch(username) {
       renderRepoStats(user, repos);
       renderHeatmap(repos);
       renderFollowers(followers, following);
-      renderFavorites(state.favorites, user => doSearch(user), username => {
-        state.favorites = state.favorites.filter(item => item.login.toLowerCase() !== username.toLowerCase());
+      renderFavorites(state.favorites, function(user) { doSearch(user); }, function(username) {
+        state.favorites = state.favorites.filter(function(item) { return item.login.toLowerCase() !== username.toLowerCase(); });
         saveFavorites(state.favorites);
         refreshFavorites();
         if (state.user1) updateBookmarkButton(isFavorite(state.user1.login));
@@ -144,7 +145,7 @@ async function doSearch(username) {
     showProfileSection();
     addToHistory(trimmed);
     refreshHistory();
-    setTimeout(() => document.getElementById('profileSection').scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+    setTimeout(function() { document.getElementById('profileSection').scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 100);
   } catch (err) {
     hideProfileSection();
     if (err.type === 'rate_limit') {
@@ -229,7 +230,7 @@ function init() {
   applyTheme(getSavedTheme());
   refreshHistory();
   refreshFavorites();
-  const urlUser = new URLSearchParams(window.location.search).get('user');
+  var urlUser = new URLSearchParams(window.location.search).get('user');
   if (urlUser) {
     searchInput.value = urlUser;
     doSearch(urlUser);
@@ -238,23 +239,26 @@ function init() {
 
   // Start human-like typing on hero subtitle and search placeholder
   try {
-    const heroEl = document.getElementById('heroSub');
-    const heroStrings = heroEl?.dataset?.strings ? heroEl.dataset.strings.split('|').map(s => s.trim()).filter(Boolean) : [];
+    var heroEl = document.getElementById('heroSub');
+    var heroStrings = [];
+    if (heroEl && heroEl.dataset && heroEl.dataset.strings) {
+      heroStrings = heroEl.dataset.strings.split('|').map(function(s) { return s.trim(); }).filter(function(s) { return !!s; });
+    }
     if (heroStrings.length) startHumanTyping(heroEl, heroStrings, { minDelay: 28, maxDelay: 120, mistakeChance: 0.05, pauseBetween: 1800, loop: true });
     startPlaceholderTyping(searchInput, ['octocat', 'torvalds', 'gaearon', 'sindresorhus', 'nodejs'], { minDelay: 25, maxDelay: 110, mistakeChance: 0.02, pauseBetween: 2400, loop: true });
   } catch (e) { /* non-fatal */ }
 }
 
-searchBtn.addEventListener('click', () => doSearch(searchInput.value));
-searchInput.addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(searchInput.value); if (e.key === 'Escape') hideHistory(); });
-searchInput.addEventListener('focus', () => { if (getHistory().length) refreshHistory(); });
-document.addEventListener('click', e => { if (!document.getElementById('searchContainer').contains(e.target)) hideHistory(); });
-sortSelect.addEventListener('change', () => handleSort(sortSelect.value));
-clearHistBtn.addEventListener('click', () => { clearHistory(); hideHistory(); });
-repoSearchInput.addEventListener('input', debounce(() => debounceUpdate(), 180));
+searchBtn.addEventListener('click', function() { doSearch(searchInput.value); });
+searchInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') doSearch(searchInput.value); if (e.key === 'Escape') hideHistory(); });
+searchInput.addEventListener('focus', function() { if (getHistory().length) refreshHistory(); });
+document.addEventListener('click', function(e) { if (!document.getElementById('searchContainer').contains(e.target)) hideHistory(); });
+sortSelect.addEventListener('change', function() { handleSort(sortSelect.value); });
+clearHistBtn.addEventListener('click', function() { clearHistory(); hideHistory(); });
+repoSearchInput.addEventListener('input', debounce(function() { debounceUpdate(); }, 180));
 languageFilter.addEventListener('change', debounceUpdate);
 starFilter.addEventListener('change', debounceUpdate);
-toggleBookmarkBtn.addEventListener('click', () => {
+toggleBookmarkBtn.addEventListener('click', function() {
   if (!state.user1) return;
   state.favorites = toggleFavorite(state.user1);
   refreshFavorites();
@@ -262,9 +266,9 @@ toggleBookmarkBtn.addEventListener('click', () => {
 });
 exportSummaryBtn.addEventListener('click', exportSummary);
 exportReportBtn.addEventListener('click', exportReport);
-themeToggle.addEventListener('click', () => { const current = document.documentElement.getAttribute('data-theme'); applyTheme(current === 'dark' ? 'light' : 'dark'); });
-btnRetry.addEventListener('click', () => { if (state.lastSearch) doSearch(state.lastSearch); });
-btnToggleCompare.addEventListener('click', () => state.compareMode ? exitCompareMode() : enterCompareMode());
+themeToggle.addEventListener('click', function() { var current = document.documentElement.getAttribute('data-theme'); applyTheme(current === 'dark' ? 'light' : 'dark'); });
+btnRetry.addEventListener('click', function() { if (state.lastSearch) doSearch(state.lastSearch); });
+btnToggleCompare.addEventListener('click', function() { if (state.compareMode) { exitCompareMode(); } else { enterCompareMode(); } });
 cancelCompare.addEventListener('click', exitCompareMode);
-document.addEventListener('keydown', e => { if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); searchInput.focus(); searchInput.select(); window.scrollTo({ top: 0, behavior: 'smooth' }); } });
+document.addEventListener('keydown', function(e) { if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); searchInput.focus(); searchInput.select(); window.scrollTo({ top: 0, behavior: 'smooth' }); } });
 init();
